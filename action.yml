@@ -1,5 +1,9 @@
 name: 'Changelog Release Action'
 description: 'Creates a GitHub release with changelog from CHANGELOG.md file'
+author: 'Idan Koblik'
+branding:
+  icon: 'tag'
+  color: 'blue'
 inputs:
   version:
     description: 'Version/tag to release'
@@ -16,8 +20,5 @@ inputs:
     description: 'GitHub token for creating release'
     required: true
 runs:
-  using: 'node16'
+  using: 'node20'
   main: 'dist/index.js'
-branding:
-  icon: 'tag'
-  color: 'blue'
