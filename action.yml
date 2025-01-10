@@ -1,24 +1,24 @@
-name: 'Changelog Release Action'
-description: 'Creates a GitHub release with changelog from CHANGELOG.md file'
-author: 'Idan Koblik'
+name: Changelog Release Action
+description: Creates a GitHub release with changelog from CHANGELOG.md file
+author: Idan Koblik
 branding:
-  icon: 'tag'
-  color: 'blue'
+  icon: box
+  color: blue
 inputs:
   version:
-    description: 'Version/tag to release'
+    description: Version/tag to release
     required: true
   changelog-file:
-    description: 'Path to changelog file'
+    description: Path to changelog file
     required: false
     default: 'CHANGELOG.md'
   files:
-    description: 'Files to include in the release (glob pattern)'
+    description: Files to include in the release (glob pattern)
     required: false
     default: ''
   github-token:
-    description: 'GitHub token for creating release'
+    description: GitHub token for creating release
     required: true
 runs:
-  using: 'node20'
-  main: 'dist/index.js'
+  using: node20
+  main: dist/index.js
