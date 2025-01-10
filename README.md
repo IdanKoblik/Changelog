@@ -30,7 +30,7 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - uses: IdanKoblik/changelog-release-action@v1
+      - uses: IdanKoblik/Changelog@production
         with:
           version: ${{ github.event.inputs.version }}
           github-token: ${{ secrets.GITHUB_TOKEN }}

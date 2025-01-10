@@ -1,0 +1,42 @@
+name: "Publish to Marketplace"
+
+on:
+  release:
+    types: [published, edited]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Package
+        run: npm run build
+
+      - name: Verify the presence of required files
+        run: |
+          if [ ! -f "action.yml" ]; then
+            echo "Error: action.yml file is missing"
+            exit 1
+          fi
+          if [ ! -f "README.md" ]; then
+            echo "Error: README.md file is missing"
+            exit 1
+          fi
+
+      - name: Publish to Marketplace
+        uses: tu6ge/publish-action@v0.4.5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
