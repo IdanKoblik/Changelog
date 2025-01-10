@@ -1,0 +1,10 @@
+export interface ChangelogSection {
+    version: string;
+    content: string;
+}
+
+export interface ActionInputs {
+    version: string;
+    changelogFile: string;
+    files?: string;
+}

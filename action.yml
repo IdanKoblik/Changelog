@@ -1,0 +1,23 @@
+name: 'Changelog Release Action'
+description: 'Creates a GitHub release with changelog from CHANGELOG.md file'
+inputs:
+  version:
+    description: 'Version/tag to release'
+    required: true
+  changelog-file:
+    description: 'Path to changelog file'
+    required: false
+    default: 'CHANGELOG.md'
+  files:
+    description: 'Files to include in the release (glob pattern)'
+    required: false
+    default: ''
+  github-token:
+    description: 'GitHub token for creating release'
+    required: true
+runs:
+  using: 'node16'
+  main: 'dist/index.js'
+branding:
+  icon: 'tag'
+  color: 'blue'
