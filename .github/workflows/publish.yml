@@ -1,42 +1,46 @@
-name: "Publish to Marketplace"
+name: Publish
 
 on:
-  release:
-    types: [published, edited]
+  push:
+    tags:
+      - '*'
 
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
+      - name: Build
+        run: npm run build
+
       - name: Run tests
         run: npm test
 
-      - name: Package
-        run: npm run build
-
-      - name: Verify the presence of required files
+      - name: Check if dist is up-to-date
         run: |
-          if [ ! -f "action.yml" ]; then
-            echo "Error: action.yml file is missing"
-            exit 1
-          fi
-          if [ ! -f "README.md" ]; then
-            echo "Error: README.md file is missing"
+          if [[ $(git status --porcelain dist/) ]]; then
+            echo "dist/ directory has uncommitted changes. Please build and commit the changes."
+            git status --porcelain dist/
             exit 1
           fi
 
-      - name: Publish to Marketplace
-        uses: tu6ge/publish-action@v0.4.5
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
