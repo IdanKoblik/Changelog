@@ -1,11 +1,9 @@
 import * as core from '@actions/core';
-import * as github from '@actions/github';
-import * as exec from '@actions/exec';
-import {ChangelogParser} from './changelog';
-import {ActionInputs} from './types';
 import * as fs from 'fs';
-import * as glob from 'glob';
+import {ChangelogParser} from './changelog';
+import {ActionInputs, GitHubReleaseResponse} from './types';
 import * as path from 'path';
+import fetch from 'node-fetch';
 
 async function run(): Promise<void> {
     try {
@@ -15,7 +13,24 @@ async function run(): Promise<void> {
             assets: core.getInput('assets'),
         };
 
-        await createTag(inputs.version);
+        const [owner, repo] = process.env.GITHUB_REPOSITORY!.split('/');
+        const token = process.env.GITHUB_TOKEN!;
+
+        const tagResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/refs`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/vnd.github.v3+json',
+                'Authorization': `token ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                ref: `refs/tags/${inputs.version}`,
+                sha: process.env.GITHUB_SHA,
+            }),
+        });
+
+        if (!tagResponse.ok)
+            throw new Error(`Failed to create tag: ${await tagResponse.text()}`);
 
         const parser = new ChangelogParser(inputs.changelogFile);
         const changelog = await parser.extractVersion(inputs.version);
@@ -26,57 +41,60 @@ async function run(): Promise<void> {
         const tempFile = 'CHANGELOG_temp.md';
         await fs.promises.writeFile(tempFile, changelog.content);
 
-        await createRelease(inputs, tempFile);
+        const releaseResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/vnd.github.v3+json',
+                'Authorization': `token ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                tag_name: inputs.version,
+                name: inputs.version,
+                body: await fs.promises.readFile(tempFile, 'utf8'),
+                draft: false,
+                prerelease: false,
+            }),
+        });
+
         await fs.promises.unlink(tempFile);
+
+        if (!releaseResponse.ok)
+            throw new Error(`Failed to create release: ${await releaseResponse.text()}`);
+
+        const releaseData = await releaseResponse.json() as GitHubReleaseResponse;
+        if (inputs.assets) {
+            const assetPaths = inputs.assets.split(',').map(a => a.trim());
+
+            for (const assetPath of assetPaths) {
+                const fileName = path.basename(assetPath);
+                const contentType = getContentType(fileName);
+                const assetContent = await fs.promises.readFile(assetPath);
+
+                const uploadResponse = await fetch(
+                    `https://uploads.github.com/repos/${owner}/${repo}/releases/${releaseData.id}/assets?name=${encodeURIComponent(fileName)}`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/vnd.github.v3+json',
+                            'Authorization': `token ${token}`,
+                            'Content-Type': contentType,
+                            'Content-Length': assetContent.length.toString(),
+                        },
+                        body: assetContent,
+                    }
+                );
+
+                if (!uploadResponse.ok)
+                    throw new Error(`Failed to upload asset ${fileName}: ${await uploadResponse.text()}`);
+            }
+        }
+
     } catch (error) {
         if (error instanceof Error)
             core.setFailed(error.message);
         else
             core.setFailed('An unexpected error occurred');
-    }
-}
-
-async function createTag(version: string): Promise<void> {
-    await exec.exec('git', ['tag', version]);
-    await exec.exec('git', ['push', 'origin', version]);
-}
-
-async function createRelease(inputs: ActionInputs, changelogPath: string): Promise<void> {
-    const token = core.getInput('github-token', { required: true });
-    const octokit = github.getOctokit(token);
-
-    const release = await octokit.rest.repos.createRelease({
-        ...github.context.repo,
-        tag_name: inputs.version,
-        name: inputs.version,
-        body: await fs.promises.readFile(changelogPath, 'utf8'),
-    });
-
-    if (inputs.assets) {
-        const assetPaths = inputs.assets.split(',').map(p => p.trim());
-
-        for (const assetPattern of assetPaths) {
-            const files = glob.sync(assetPattern);
-
-            for (const file of files) {
-                const fileName = path.basename(file);
-                const contentLength = (await fs.promises.stat(file)).size;
-                const contentType = getContentType(fileName);
-
-                const uploadResponse = await octokit.rest.repos.uploadReleaseAsset({
-                    ...github.context.repo,
-                    release_id: release.data.id,
-                    name: fileName,
-                    data: await fs.promises.readFile(file) as any,
-                    headers: {
-                        'content-type': contentType,
-                        'content-length': contentLength,
-                    },
-                });
-
-                core.info(`Uploaded ${fileName} to release ${inputs.version}`);
-            }
-        }
     }
 }
 

@@ -8,3 +8,10 @@ export interface ActionInputs {
     changelogFile: string;
     assets?: string;
 }
+
+export interface GitHubReleaseResponse {
+    id: number;
+    upload_url: string;
+    tag_name: string;
+    name: string;
+}
