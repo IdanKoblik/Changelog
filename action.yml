@@ -16,9 +16,6 @@ inputs:
     description: Assets to include in the release (glob pattern)
     required: false
     default: ''
-  github-token:
-    description: GitHub token for creating release
-    required: true
 runs:
   using: node20
   main: dist/index.js
