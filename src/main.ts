@@ -75,9 +75,10 @@ async function run(): Promise<void> {
 
         if (inputs.assets && inputs.assets.length > 0) {
             for (const assetPath of inputs.assets) {
-                const fileName = path.basename(assetPath);
+                const fullPath = path.resolve(process.env.GITHUB_WORKSPACE!, assetPath);
+                const fileName = path.basename(fullPath);
                 const contentType = getContentType(fileName);
-                const assetContent = await fs.promises.readFile(assetPath);
+                const assetContent = await fs.promises.readFile(fullPath);
 
                 const uploadResponse = await fetch(
                     `https://uploads.github.com/repos/${owner}/${repo}/releases/${releaseData.id}/assets?name=${encodeURIComponent(fileName)}`,
@@ -108,7 +109,7 @@ async function run(): Promise<void> {
 
 function getContentType(fileName: string): string {
     const ext = path.extname(fileName).toLowerCase();
-    const contentTypes: {[key: string]: string} = {
+    const contentTypes: { [key: string]: string } = {
         '.zip': 'application/zip',
         '.tar': 'application/x-tar',
         '.gz': 'application/gzip',
