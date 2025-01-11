@@ -47,7 +47,7 @@ async function createRelease(inputs: ActionInputs, changelogPath: string): Promi
         tag_name: inputs.version,
         name: inputs.version,
         body: await fs.promises.readFile(changelogPath, 'utf8'),
-        files: inputs.files ? inputs.files.split('\n').map(f => f.trim()) : undefined
+        assets: inputs.files ? inputs.files.split('\n').map(f => f.trim()) : undefined
     });
 }
 
