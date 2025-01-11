@@ -49,6 +49,7 @@ jobs:
           git config --global user.email "github-actions@github.com"
           git add dist
           git commit -m "Update dist directory"
+          git push origin master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
