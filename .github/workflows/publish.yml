@@ -34,12 +34,24 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Commit built files
+        if: ${{ steps.check_dist.outputs.changed == 'true' }}
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add dist
+          git commit -m "Update dist directory"
+          git push origin master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Check if dist is up-to-date
+        id: check_dist
         run: |
           if [[ $(git status --porcelain dist/) ]]; then
-            echo "dist/ directory has uncommitted changes. Please build and commit the changes."
-            git status --porcelain dist/
-            exit 1
+            echo "::set-output name=changed::true"
+          else
+            echo "::set-output name=changed::false"
           fi
 
       - name: Create Release

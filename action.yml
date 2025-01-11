@@ -12,10 +12,10 @@ inputs:
     description: Path to changelog file
     required: false
     default: 'CHANGELOG.md'
-#  assets:
-#    description: Assets to include in the release (glob pattern)
- #   required: false
-  #  default: ''
+  assets:
+    description: Assets to include in the release (glob pattern)
+    required: false
+    default: ''
   github-token:
     description: GitHub token for creating release
     required: true

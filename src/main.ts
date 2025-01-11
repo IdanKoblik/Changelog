@@ -7,21 +7,19 @@ import fetch from 'node-fetch';
 
 async function run(): Promise<void> {
     try {
-       /* const assetsInput = core.getInput('assets');
+        const assetsInput = core.getInput('assets');
         let parsedAssets: string[] | undefined;
 
         try {
             parsedAssets = assetsInput ? JSON.parse(assetsInput) : undefined;
         } catch (e) {
             throw new Error('Failed to parse assets input. Please provide a valid JSON array of strings.');
-        }*/
+        }
 
         const inputs: ActionInputs = {
             version: core.getInput('version', { required: true }),
             changelogFile: core.getInput('changelog-file') || 'CHANGELOG.md',
-/*
             assets: parsedAssets
-*/
         };
 
         const [owner, repo] = process.env.GITHUB_REPOSITORY!.split('/');
@@ -75,7 +73,7 @@ async function run(): Promise<void> {
 
         const releaseData = await releaseResponse.json() as GitHubReleaseResponse;
 
-        /*if (inputs.assets && inputs.assets.length > 0) {
+        if (inputs.assets && inputs.assets.length > 0) {
             for (const assetPath of inputs.assets) {
                 const fullPath = path.resolve(process.env.GITHUB_WORKSPACE!, assetPath);
                 const fileName = path.basename(fullPath);
@@ -99,7 +97,7 @@ async function run(): Promise<void> {
                 if (!uploadResponse.ok)
                     throw new Error(`Failed to upload asset ${fileName}: ${await uploadResponse.text()}`);
             }
-        }*/
+        }
 
     } catch (error) {
         if (error instanceof Error)
@@ -121,5 +119,4 @@ function getContentType(fileName: string): string {
 
     return contentTypes[ext] || 'application/octet-stream';
 }
-
 run();
