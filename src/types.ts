@@ -6,7 +6,7 @@ export interface ChangelogSection {
 export interface ActionInputs {
     version: string;
     changelogFile: string;
-    assets?: string;
+    assets?: string[];
 }
 
 export interface GitHubReleaseResponse {

@@ -7,10 +7,19 @@ import fetch from 'node-fetch';
 
 async function run(): Promise<void> {
     try {
+        const assetsInput = core.getInput('assets');
+        let parsedAssets: string[] | undefined;
+
+        try {
+            parsedAssets = assetsInput ? JSON.parse(assetsInput) : undefined;
+        } catch (e) {
+            throw new Error('Failed to parse assets input. Please provide a valid JSON array of strings.');
+        }
+
         const inputs: ActionInputs = {
             version: core.getInput('version', { required: true }),
             changelogFile: core.getInput('changelog-file') || 'CHANGELOG.md',
-            assets: core.getInput('assets'),
+            assets: parsedAssets
         };
 
         const [owner, repo] = process.env.GITHUB_REPOSITORY!.split('/');
@@ -20,7 +29,7 @@ async function run(): Promise<void> {
             method: 'POST',
             headers: {
                 'Accept': 'application/vnd.github.v3+json',
-                'Authorization': `token ${token}`,
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -45,7 +54,7 @@ async function run(): Promise<void> {
             method: 'POST',
             headers: {
                 'Accept': 'application/vnd.github.v3+json',
-                'Authorization': `token ${token}`,
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -63,10 +72,9 @@ async function run(): Promise<void> {
             throw new Error(`Failed to create release: ${await releaseResponse.text()}`);
 
         const releaseData = await releaseResponse.json() as GitHubReleaseResponse;
-        if (inputs.assets) {
-            const assetPaths = inputs.assets.split(',').map(a => a.trim());
 
-            for (const assetPath of assetPaths) {
+        if (inputs.assets && inputs.assets.length > 0) {
+            for (const assetPath of inputs.assets) {
                 const fileName = path.basename(assetPath);
                 const contentType = getContentType(fileName);
                 const assetContent = await fs.promises.readFile(assetPath);
@@ -77,7 +85,7 @@ async function run(): Promise<void> {
                         method: 'POST',
                         headers: {
                             'Accept': 'application/vnd.github.v3+json',
-                            'Authorization': `token ${token}`,
+                            'Authorization': `Bearer ${token}`,
                             'Content-Type': contentType,
                             'Content-Length': assetContent.length.toString(),
                         },
