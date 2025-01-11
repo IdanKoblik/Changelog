@@ -37,11 +37,12 @@ jobs:
 ```
 
 ## Inputs
-| version        | Version/tag to release (e.g., v1.0.0)      | Yes | N/A          |
-|----------------|--------------------------------------------|-----|--------------|
-| changelog-file | Path to changelog file                     | No  | CHANGELOG.md | 
-| files          | Files to include in release (glob pattern) | No  | ''           |
-| github-token   | GitHub token for creating release          | Yes | N/A          |
+| INPUT          | DESCRIPTION                                 | REQUIRED | DEFAULT      |
+|----------------|---------------------------------------------|----------|--------------|
+| version        | Version/tag to release (e.g., v1.0.0)       | Yes      | N/A          |
+| changelog-file | Path to changelog file                      | No       | CHANGELOG.md | 
+| assets         | Assets to include in release (glob pattern) | No       | ''           |
+| github-token   | GitHub token for creating release           | Yes      | N/A          |
 
 ## Changelog Format
 This action expects your changelog to follow the format below:
