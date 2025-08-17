@@ -20,7 +20,6 @@ export class ChangelogParser {
 
                 if (version === targetVersion) {
                     capturing = true;
-                    versionContent.push(line);
                 } else if (capturing)
                     break;
 
